@@ -1,18 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ProductModule } from './product/product.module';
-import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from './strategies';
-import { StoreModule } from './store/store.module';
+import { ControllerModule } from './controller/controller.module';
+import { ResolverModule } from './resolver/resolver.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // makes ConfigService available app-wide
+      isGlobal: true,
     }),
-    AuthModule,
-    ProductModule,
-    StoreModule,
+    ControllerModule,
+    ResolverModule,
   ],
   providers: [JwtStrategy],
 })

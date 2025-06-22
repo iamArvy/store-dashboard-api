@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
-import { VariantResponse } from '../variant/dto';
+import { VariantResponse } from '../variant';
 
 @ObjectType()
 export class CategoryResponse {

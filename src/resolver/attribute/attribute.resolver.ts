@@ -1,5 +1,5 @@
 import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
-import { AttributeResponse, UpdateAttributeInput } from './dto';
+import { AttributeResponse, UpdateAttributeInput } from 'src/dto/attribute';
 import { Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import {
@@ -31,7 +31,7 @@ export class AttributeResolver {
   update(@Args('id') id: string, @Args('data') data: UpdateAttributeInput) {
     const value = {
       id,
-      ...data,
+      data,
     };
     return this.service.update(value);
   }

@@ -9,7 +9,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { UpdateEmailInput, UpdatePasswordInput } from './dto/user.inputs';
+import {
+  UpdateEmailInput,
+  UpdatePasswordInput,
+} from 'src/dto/user/user.inputs';
 import { RestAuthGuard } from 'src/guards';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { ClientGrpc } from '@nestjs/microservices';

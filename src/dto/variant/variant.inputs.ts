@@ -1,7 +1,7 @@
 import { Field, InputType, Int, PartialType } from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsInt, IsNotEmpty, IsString } from 'class-validator';
-import { AttributeInput } from '../../attribute/dto';
+import { AttributeInput } from '../attribute';
 
 @InputType()
 export class CreateVariantInput {

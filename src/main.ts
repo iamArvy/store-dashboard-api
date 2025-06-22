@@ -7,7 +7,7 @@ async function bootstrap() {
   app.enableCors();
   const config = new DocumentBuilder()
     .setTitle('Emporium Store Dashboard API')
-    .setDescription('Emporium Multivendor Marketplace API')
+    .setDescription('Emporium Store Dashboard API')
     .setVersion('1.0')
     .addBearerAuth()
     .setContact(

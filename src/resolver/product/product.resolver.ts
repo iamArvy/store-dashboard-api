@@ -1,7 +1,11 @@
 import { Inject, UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { GqlAuthGuard } from 'src/guards';
-import { CreateProductInput, ProductResponse, UpdateProductInput } from './dto';
+import {
+  // CreateProductInput,
+  ProductResponse,
+  UpdateProductInput,
+} from '../../dto/product';
 import {
   PRODUCT_SERVICE_NAME,
   ProductServiceClient,
@@ -17,11 +21,11 @@ export class ProductResolver {
     this.service =
       this.client.getService<ProductServiceClient>(PRODUCT_SERVICE_NAME);
   }
-  @UseGuards(GqlAuthGuard)
-  @Mutation(() => ProductResponse, { name: 'create_product' })
-  createProduct(@Args('data') data: CreateProductInput) {
-    return this.service.create(data);
-  }
+  // @UseGuards(GqlAuthGuard)
+  // @Mutation(() => ProductResponse, { name: 'create_product' })
+  // createProduct(@Args('data') data: CreateProductInput) {
+  //   return this.service.create(data);
+  // }
 
   @Query(() => ProductResponse, { name: 'product' })
   getProduct(@Args('id') id: string) {
@@ -30,13 +34,13 @@ export class ProductResolver {
 
   @Query(() => [ProductResponse], { name: 'products' })
   products(@Args('id') id: string) {
-    return this.service.getStoreProducts({ id });
+    return this.service.listStoreProducts({ id });
   }
 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => ProductResponse, { name: 'update_product' })
   update(@Args('id') id: string, @Args('data') data: UpdateProductInput) {
-    return this.service.update({ id, ...data });
+    return this.service.update({ id, data });
   }
 
   @UseGuards(GqlAuthGuard)

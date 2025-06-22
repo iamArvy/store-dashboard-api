@@ -1,9 +1,9 @@
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { GraphQLModule } from '@nestjs/graphql';
 import { Module } from '@nestjs/common';
-import { ProductController } from './product.controller';
+import { ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
-import { ProductResolver } from './product.resolver';
-import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -50,9 +50,34 @@ import { ConfigService } from '@nestjs/config';
           },
         }),
       },
+      {
+        name: 'auth',
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: 'auth',
+            protoPath: join(__dirname, '../../proto/auth.proto'),
+            url: configService.get<string>('AUTH_GRPC_URL'),
+            // loader: {
+            //   keepCase: true,
+            //   longs: String,
+            //   enums: String,
+            //   defaults: true,
+            //   arrays: true,
+            //   objects: true,
+            //   oneofs: true,
+            // },
+          },
+        }),
+      },
     ]),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: true,
+      playground: true,
+      sortSchema: true,
+    }),
   ],
-  controllers: [ProductController],
-  providers: [ProductResolver],
 })
-export class ProductModule {}
+export class ResolverModule {}

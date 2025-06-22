@@ -6,9 +6,9 @@ import {
   OnModuleInit,
   Post,
 } from '@nestjs/common';
-import { LoginInput, RegisterInput } from './dto/auth.inputs';
+import { LoginInput, RegisterInput } from 'src/dto/auth/auth.inputs';
 import { ApiBody, ApiOkResponse } from '@nestjs/swagger';
-import { AuthResponse } from './dto/auth.response';
+import { AuthResponse } from 'src/dto/auth/auth.response';
 import { ClientGrpc } from '@nestjs/microservices';
 import { HealthResponse } from 'src/dto/status.response';
 import { AUTH_SERVICE_NAME, AuthServiceClient } from 'src/generated/auth';

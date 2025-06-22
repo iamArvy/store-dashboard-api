@@ -8,7 +8,11 @@ import {
   Patch,
   Put,
 } from '@nestjs/common';
-import { CreateVariantInput, UpdateVariantInput, VariantResponse } from './dto';
+import {
+  CreateVariantInput,
+  UpdateVariantInput,
+  VariantResponse,
+} from 'src/dto/variant';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { ClientGrpc } from '@nestjs/microservices';
 import {

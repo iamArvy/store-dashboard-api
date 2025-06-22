@@ -1,5 +1,9 @@
 import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
-import { CreateVariantInput, UpdateVariantInput, VariantResponse } from './dto';
+import {
+  CreateVariantInput,
+  UpdateVariantInput,
+  VariantResponse,
+} from 'src/dto/variant';
 import { GqlAuthGuard } from '../../guards';
 import { Inject, UseGuards } from '@nestjs/common';
 import {

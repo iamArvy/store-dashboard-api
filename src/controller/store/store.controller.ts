@@ -12,8 +12,8 @@ import {
 import { ClientGrpc } from '@nestjs/microservices';
 // import { firstValueFrom } from 'rxjs';
 import { STORE_SERVICE_NAME, StoreServiceClient } from 'src/generated/store';
-import { CreateStoreInput, UpdateStoreInput } from './dto/store.inputs';
-import { RestAuthGuard } from '../guards';
+import { CreateStoreInput, UpdateStoreInput } from 'src/dto/store/store.inputs';
+import { RestAuthGuard } from 'src/guards';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiBearerAuth()

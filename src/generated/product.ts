@@ -9,7 +9,6 @@ import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import type { handleUnaryCall, UntypedServiceImplementation } from "@grpc/grpc-js";
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
-import { Empty } from "./google/protobuf/empty";
 
 export const protobufPackage = "product";
 
@@ -25,42 +24,43 @@ export interface Name {
   name: string;
 }
 
-export interface CreateAttributeInput {
-  variantId: string;
+export interface AttributeInput {
   key: string;
   value: string;
-  /** Optional, if the attribute is store-specific */
-  storeId?: string | undefined;
 }
 
-export interface FindAttributeInput {
-  variantId?: string | undefined;
-  orderBy?:
-    | AttributeOrderBy
-    | undefined;
-  /** Number of items to skip for pagination */
-  skip?: number | undefined;
-  take?: number | undefined;
+export interface PartialAttributeInput {
+  key?: string | undefined;
+  value?: string | undefined;
 }
 
-export interface AttributeOrderBy {
-  /** Sort by key */
-  key?:
-    | string
-    | undefined;
-  /** Sort by value */
-  value?:
-    | string
-    | undefined;
-  /** Sort by value */
-  createdAt?: string | undefined;
-  updatedAt?: string | undefined;
+export interface CreateAttributeInput {
+  variantId: string;
+  data: AttributeInput | undefined;
 }
 
 export interface UpdateAttributeInput {
   id: string;
+  data: PartialAttributeInput | undefined;
+}
+
+export interface AttributeOrderBy {
   key?: string | undefined;
   value?: string | undefined;
+  createdAt?: string | undefined;
+  updatedAt?: string | undefined;
+}
+
+export interface ListAttributeInput {
+  variantId?: string | undefined;
+  orderBy?: AttributeOrderBy | undefined;
+  skip?: number | undefined;
+  take?: number | undefined;
+}
+
+export interface ListAttributeByRelationInput {
+  id: string;
+  params: ListAttributeInput | undefined;
 }
 
 export interface Attribute {
@@ -68,24 +68,32 @@ export interface Attribute {
   name: string;
   value: string;
   variantId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AttributeList {
   attributes: Attribute[];
 }
 
-export interface CreateCategoryInput {
+export interface CategoryInput {
   name: string;
   description: string;
 }
 
-export interface FindCategoryInput {
-  orderBy?:
-    | CategoryOrderBy
-    | undefined;
-  /** Number of items to skip for pagination */
-  skip?: number | undefined;
-  take?: number | undefined;
+export interface PartialCategoryInput {
+  name?: string | undefined;
+  description?: string | undefined;
+}
+
+export interface CreateCategoryInput {
+  storeId: string;
+  data: CategoryInput | undefined;
+}
+
+export interface UpdateCategoryInput {
+  id: string;
+  data: PartialCategoryInput | undefined;
 }
 
 export interface CategoryOrderBy {
@@ -101,18 +109,25 @@ export interface CategoryOrderBy {
   updatedAt?: string | undefined;
 }
 
-export interface UpdateCategoryInput {
+export interface ListCategoryInput {
+  orderBy?:
+    | CategoryOrderBy
+    | undefined;
+  /** Number of items to skip for pagination */
+  skip?: number | undefined;
+  take?: number | undefined;
+}
+
+export interface ListCategoryByRelationInput {
   id: string;
-  name?: string | undefined;
-  description?: string | undefined;
-  createdAt?: string | undefined;
-  updatedAt?: string | undefined;
+  params?: ListCategoryInput | undefined;
 }
 
 export interface Category {
   id: string;
   name: string;
   description: string;
+  storeId: string;
   createdAt?: string | undefined;
   updatedAt?: string | undefined;
 }
@@ -121,37 +136,35 @@ export interface CategoryList {
   categories: Category[];
 }
 
-export interface CreateProductInput {
+export interface ProductInput {
   name: string;
   description: string;
-  storeId: string;
   categoryId: string;
   tags: string[];
-  /** IDs of attributes associated with the product */
-  variant?: ProductVariantInput | undefined;
 }
 
-export interface ProductVariantInput {
-  sku: string;
-  price: number;
-  stock: number;
-  attributes: VariantAttributeInput[];
+export interface PartialProductInput {
+  name?: string | undefined;
+  description?: string | undefined;
+  categoryId?: string | undefined;
+  tags: string[];
 }
 
-export interface VariantAttributeInput {
-  key: string;
-  value: string;
+export interface CreateProductInput {
+  storeId: string;
+  data: ProductInput | undefined;
+  variants: VariantInput[];
 }
 
 export interface UpdateProductInput {
   id: string;
-  name?: string | undefined;
-  description?: string | undefined;
+  data: PartialProductInput | undefined;
 }
 
 export interface ProductStore {
   id: string;
   name: string;
+  logo: string;
 }
 
 export interface ProductCategory {
@@ -163,7 +176,6 @@ export interface ProductVariant {
   id: string;
   name: string;
   description: string;
-  /** Attributes associated with the variant */
   attributes: Attribute[];
 }
 
@@ -171,9 +183,7 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  /** ID of the category this product belongs to */
   categoryId: string;
-  /** ID of the store this product belongs to */
   storeId: string;
   createdAt: string;
   updatedAt: string;
@@ -184,14 +194,8 @@ export interface ProductWithRelationships {
   id: string;
   name: string;
   description: string;
-  store:
-    | ProductStore
-    | undefined;
-  /** Category of the product */
-  category:
-    | ProductCategory
-    | undefined;
-  /** Attributes associated with the product */
+  store: ProductStore | undefined;
+  category: ProductCategory | undefined;
   variants: ProductVariant[];
   createdAt: string;
   updatedAt: string;
@@ -201,17 +205,54 @@ export interface ProductList {
   products: Product[];
 }
 
-export interface CreateVariantInput {
-  productId: string;
+export interface ProductOrderBy {
+  /** Sort by key */
+  name?:
+    | string
+    | undefined;
+  /** Sort by value */
+  createdAt?:
+    | string
+    | undefined;
+  /** Sort by value */
+  updatedAt?: string | undefined;
+}
+
+export interface ListProductInput {
+  orderBy?:
+    | ProductOrderBy
+    | undefined;
+  /** Number of items to skip for pagination */
+  skip?: number | undefined;
+  take?: number | undefined;
+}
+
+export interface ListProductByRelationInput {
+  id: string;
+  params?: ListProductInput | undefined;
+}
+
+export interface VariantInput {
   sku: string;
   price: number;
   stock: number;
+  attributes: AttributeInput[];
+}
+
+export interface PartialVariantInput {
+  sku?: string | undefined;
+  price?: number | undefined;
+  stock?: number | undefined;
+}
+
+export interface CreateVariantInput {
+  productId: string;
+  data: VariantInput | undefined;
 }
 
 export interface UpdateVariantInput {
   id: string;
-  sku?: string | undefined;
-  price?: number | undefined;
+  data: PartialVariantInput | undefined;
 }
 
 export interface Variant {
@@ -225,12 +266,35 @@ export interface Variant {
   updatedAt: string;
 }
 
-export interface VariantId {
-  id: string;
-}
-
 export interface VariantList {
   variants: Variant[];
+}
+
+export interface VariantOrderBy {
+  /** Sort by key */
+  price?:
+    | number
+    | undefined;
+  /** Sort by value */
+  createdAt?:
+    | string
+    | undefined;
+  /** Sort by value */
+  updatedAt?: string | undefined;
+}
+
+export interface ListVariantInput {
+  orderBy?:
+    | VariantOrderBy
+    | undefined;
+  /** Number of items to skip for pagination */
+  skip?: number | undefined;
+  take?: number | undefined;
+}
+
+export interface ListVariantByRelationInput {
+  id: string;
+  params?: ListVariantInput | undefined;
 }
 
 export const PRODUCT_PACKAGE_NAME = "product";
@@ -346,8 +410,104 @@ export const Name: MessageFns<Name> = {
   },
 };
 
+function createBaseAttributeInput(): AttributeInput {
+  return { key: "", value: "" };
+}
+
+export const AttributeInput: MessageFns<AttributeInput> = {
+  encode(message: AttributeInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== "") {
+      writer.uint32(18).string(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): AttributeInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAttributeInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBasePartialAttributeInput(): PartialAttributeInput {
+  return {};
+}
+
+export const PartialAttributeInput: MessageFns<PartialAttributeInput> = {
+  encode(message: PartialAttributeInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.key !== undefined) {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== undefined) {
+      writer.uint32(18).string(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PartialAttributeInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePartialAttributeInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
 function createBaseCreateAttributeInput(): CreateAttributeInput {
-  return { variantId: "", key: "", value: "" };
+  return { variantId: "", data: undefined };
 }
 
 export const CreateAttributeInput: MessageFns<CreateAttributeInput> = {
@@ -355,14 +515,8 @@ export const CreateAttributeInput: MessageFns<CreateAttributeInput> = {
     if (message.variantId !== "") {
       writer.uint32(10).string(message.variantId);
     }
-    if (message.key !== "") {
-      writer.uint32(18).string(message.key);
-    }
-    if (message.value !== "") {
-      writer.uint32(26).string(message.value);
-    }
-    if (message.storeId !== undefined) {
-      writer.uint32(34).string(message.storeId);
+    if (message.data !== undefined) {
+      AttributeInput.encode(message.data, writer.uint32(18).fork()).join();
     }
     return writer;
   },
@@ -387,23 +541,7 @@ export const CreateAttributeInput: MessageFns<CreateAttributeInput> = {
             break;
           }
 
-          message.key = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.value = reader.string();
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.storeId = reader.string();
+          message.data = AttributeInput.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -416,31 +554,25 @@ export const CreateAttributeInput: MessageFns<CreateAttributeInput> = {
   },
 };
 
-function createBaseFindAttributeInput(): FindAttributeInput {
-  return {};
+function createBaseUpdateAttributeInput(): UpdateAttributeInput {
+  return { id: "", data: undefined };
 }
 
-export const FindAttributeInput: MessageFns<FindAttributeInput> = {
-  encode(message: FindAttributeInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.variantId !== undefined) {
-      writer.uint32(10).string(message.variantId);
+export const UpdateAttributeInput: MessageFns<UpdateAttributeInput> = {
+  encode(message: UpdateAttributeInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
     }
-    if (message.orderBy !== undefined) {
-      AttributeOrderBy.encode(message.orderBy, writer.uint32(18).fork()).join();
-    }
-    if (message.skip !== undefined) {
-      writer.uint32(24).int32(message.skip);
-    }
-    if (message.take !== undefined) {
-      writer.uint32(32).int32(message.take);
+    if (message.data !== undefined) {
+      PartialAttributeInput.encode(message.data, writer.uint32(18).fork()).join();
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FindAttributeInput {
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateAttributeInput {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFindAttributeInput();
+    const message = createBaseUpdateAttributeInput();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -449,7 +581,7 @@ export const FindAttributeInput: MessageFns<FindAttributeInput> = {
             break;
           }
 
-          message.variantId = reader.string();
+          message.id = reader.string();
           continue;
         }
         case 2: {
@@ -457,23 +589,7 @@ export const FindAttributeInput: MessageFns<FindAttributeInput> = {
             break;
           }
 
-          message.orderBy = AttributeOrderBy.decode(reader, reader.uint32());
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.skip = reader.int32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.take = reader.int32();
+          message.data = PartialAttributeInput.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -556,28 +672,95 @@ export const AttributeOrderBy: MessageFns<AttributeOrderBy> = {
   },
 };
 
-function createBaseUpdateAttributeInput(): UpdateAttributeInput {
-  return { id: "" };
+function createBaseListAttributeInput(): ListAttributeInput {
+  return {};
 }
 
-export const UpdateAttributeInput: MessageFns<UpdateAttributeInput> = {
-  encode(message: UpdateAttributeInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
+export const ListAttributeInput: MessageFns<ListAttributeInput> = {
+  encode(message: ListAttributeInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.variantId !== undefined) {
+      writer.uint32(10).string(message.variantId);
     }
-    if (message.key !== undefined) {
-      writer.uint32(18).string(message.key);
+    if (message.orderBy !== undefined) {
+      AttributeOrderBy.encode(message.orderBy, writer.uint32(18).fork()).join();
     }
-    if (message.value !== undefined) {
-      writer.uint32(26).string(message.value);
+    if (message.skip !== undefined) {
+      writer.uint32(24).int32(message.skip);
+    }
+    if (message.take !== undefined) {
+      writer.uint32(32).int32(message.take);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): UpdateAttributeInput {
+  decode(input: BinaryReader | Uint8Array, length?: number): ListAttributeInput {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseUpdateAttributeInput();
+    const message = createBaseListAttributeInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.variantId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.orderBy = AttributeOrderBy.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.skip = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.take = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseListAttributeByRelationInput(): ListAttributeByRelationInput {
+  return { id: "", params: undefined };
+}
+
+export const ListAttributeByRelationInput: MessageFns<ListAttributeByRelationInput> = {
+  encode(message: ListAttributeByRelationInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.params !== undefined) {
+      ListAttributeInput.encode(message.params, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListAttributeByRelationInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListAttributeByRelationInput();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -594,15 +777,7 @@ export const UpdateAttributeInput: MessageFns<UpdateAttributeInput> = {
             break;
           }
 
-          message.key = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.value = reader.string();
+          message.params = ListAttributeInput.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -616,7 +791,7 @@ export const UpdateAttributeInput: MessageFns<UpdateAttributeInput> = {
 };
 
 function createBaseAttribute(): Attribute {
-  return { id: "", name: "", value: "", variantId: "" };
+  return { id: "", name: "", value: "", variantId: "", createdAt: "", updatedAt: "" };
 }
 
 export const Attribute: MessageFns<Attribute> = {
@@ -632,6 +807,12 @@ export const Attribute: MessageFns<Attribute> = {
     }
     if (message.variantId !== "") {
       writer.uint32(34).string(message.variantId);
+    }
+    if (message.createdAt !== "") {
+      writer.uint32(42).string(message.createdAt);
+    }
+    if (message.updatedAt !== "") {
+      writer.uint32(50).string(message.updatedAt);
     }
     return writer;
   },
@@ -673,6 +854,22 @@ export const Attribute: MessageFns<Attribute> = {
           }
 
           message.variantId = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.updatedAt = reader.string();
           continue;
         }
       }
@@ -722,12 +919,12 @@ export const AttributeList: MessageFns<AttributeList> = {
   },
 };
 
-function createBaseCreateCategoryInput(): CreateCategoryInput {
+function createBaseCategoryInput(): CategoryInput {
   return { name: "", description: "" };
 }
 
-export const CreateCategoryInput: MessageFns<CreateCategoryInput> = {
-  encode(message: CreateCategoryInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const CategoryInput: MessageFns<CategoryInput> = {
+  encode(message: CategoryInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
     }
@@ -737,10 +934,10 @@ export const CreateCategoryInput: MessageFns<CreateCategoryInput> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): CreateCategoryInput {
+  decode(input: BinaryReader | Uint8Array, length?: number): CategoryInput {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCreateCategoryInput();
+    const message = createBaseCategoryInput();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -770,28 +967,25 @@ export const CreateCategoryInput: MessageFns<CreateCategoryInput> = {
   },
 };
 
-function createBaseFindCategoryInput(): FindCategoryInput {
+function createBasePartialCategoryInput(): PartialCategoryInput {
   return {};
 }
 
-export const FindCategoryInput: MessageFns<FindCategoryInput> = {
-  encode(message: FindCategoryInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.orderBy !== undefined) {
-      CategoryOrderBy.encode(message.orderBy, writer.uint32(10).fork()).join();
+export const PartialCategoryInput: MessageFns<PartialCategoryInput> = {
+  encode(message: PartialCategoryInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.name !== undefined) {
+      writer.uint32(10).string(message.name);
     }
-    if (message.skip !== undefined) {
-      writer.uint32(16).int32(message.skip);
-    }
-    if (message.take !== undefined) {
-      writer.uint32(24).int32(message.take);
+    if (message.description !== undefined) {
+      writer.uint32(18).string(message.description);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FindCategoryInput {
+  decode(input: BinaryReader | Uint8Array, length?: number): PartialCategoryInput {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFindCategoryInput();
+    const message = createBasePartialCategoryInput();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -800,23 +994,111 @@ export const FindCategoryInput: MessageFns<FindCategoryInput> = {
             break;
           }
 
-          message.orderBy = CategoryOrderBy.decode(reader, reader.uint32());
+          message.name = reader.string();
           continue;
         }
         case 2: {
-          if (tag !== 16) {
+          if (tag !== 18) {
             break;
           }
 
-          message.skip = reader.int32();
+          message.description = reader.string();
           continue;
         }
-        case 3: {
-          if (tag !== 24) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseCreateCategoryInput(): CreateCategoryInput {
+  return { storeId: "", data: undefined };
+}
+
+export const CreateCategoryInput: MessageFns<CreateCategoryInput> = {
+  encode(message: CreateCategoryInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.storeId !== "") {
+      writer.uint32(10).string(message.storeId);
+    }
+    if (message.data !== undefined) {
+      CategoryInput.encode(message.data, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateCategoryInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateCategoryInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
             break;
           }
 
-          message.take = reader.int32();
+          message.storeId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.data = CategoryInput.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseUpdateCategoryInput(): UpdateCategoryInput {
+  return { id: "", data: undefined };
+}
+
+export const UpdateCategoryInput: MessageFns<UpdateCategoryInput> = {
+  encode(message: UpdateCategoryInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.data !== undefined) {
+      PartialCategoryInput.encode(message.data, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateCategoryInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateCategoryInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.data = PartialCategoryInput.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -888,34 +1170,84 @@ export const CategoryOrderBy: MessageFns<CategoryOrderBy> = {
   },
 };
 
-function createBaseUpdateCategoryInput(): UpdateCategoryInput {
-  return { id: "" };
+function createBaseListCategoryInput(): ListCategoryInput {
+  return {};
 }
 
-export const UpdateCategoryInput: MessageFns<UpdateCategoryInput> = {
-  encode(message: UpdateCategoryInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
+export const ListCategoryInput: MessageFns<ListCategoryInput> = {
+  encode(message: ListCategoryInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.orderBy !== undefined) {
+      CategoryOrderBy.encode(message.orderBy, writer.uint32(10).fork()).join();
     }
-    if (message.name !== undefined) {
-      writer.uint32(18).string(message.name);
+    if (message.skip !== undefined) {
+      writer.uint32(16).int32(message.skip);
     }
-    if (message.description !== undefined) {
-      writer.uint32(26).string(message.description);
-    }
-    if (message.createdAt !== undefined) {
-      writer.uint32(34).string(message.createdAt);
-    }
-    if (message.updatedAt !== undefined) {
-      writer.uint32(42).string(message.updatedAt);
+    if (message.take !== undefined) {
+      writer.uint32(24).int32(message.take);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): UpdateCategoryInput {
+  decode(input: BinaryReader | Uint8Array, length?: number): ListCategoryInput {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseUpdateCategoryInput();
+    const message = createBaseListCategoryInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.orderBy = CategoryOrderBy.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.skip = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.take = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseListCategoryByRelationInput(): ListCategoryByRelationInput {
+  return { id: "" };
+}
+
+export const ListCategoryByRelationInput: MessageFns<ListCategoryByRelationInput> = {
+  encode(message: ListCategoryByRelationInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.params !== undefined) {
+      ListCategoryInput.encode(message.params, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListCategoryByRelationInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListCategoryByRelationInput();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -932,31 +1264,7 @@ export const UpdateCategoryInput: MessageFns<UpdateCategoryInput> = {
             break;
           }
 
-          message.name = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.description = reader.string();
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.createdAt = reader.string();
-          continue;
-        }
-        case 5: {
-          if (tag !== 42) {
-            break;
-          }
-
-          message.updatedAt = reader.string();
+          message.params = ListCategoryInput.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -970,7 +1278,7 @@ export const UpdateCategoryInput: MessageFns<UpdateCategoryInput> = {
 };
 
 function createBaseCategory(): Category {
-  return { id: "", name: "", description: "" };
+  return { id: "", name: "", description: "", storeId: "" };
 }
 
 export const Category: MessageFns<Category> = {
@@ -984,11 +1292,14 @@ export const Category: MessageFns<Category> = {
     if (message.description !== "") {
       writer.uint32(26).string(message.description);
     }
+    if (message.storeId !== "") {
+      writer.uint32(34).string(message.storeId);
+    }
     if (message.createdAt !== undefined) {
-      writer.uint32(34).string(message.createdAt);
+      writer.uint32(42).string(message.createdAt);
     }
     if (message.updatedAt !== undefined) {
-      writer.uint32(42).string(message.updatedAt);
+      writer.uint32(50).string(message.updatedAt);
     }
     return writer;
   },
@@ -1029,11 +1340,19 @@ export const Category: MessageFns<Category> = {
             break;
           }
 
-          message.createdAt = reader.string();
+          message.storeId = reader.string();
           continue;
         }
         case 5: {
           if (tag !== 42) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
             break;
           }
 
@@ -1087,37 +1406,31 @@ export const CategoryList: MessageFns<CategoryList> = {
   },
 };
 
-function createBaseCreateProductInput(): CreateProductInput {
-  return { name: "", description: "", storeId: "", categoryId: "", tags: [] };
+function createBaseProductInput(): ProductInput {
+  return { name: "", description: "", categoryId: "", tags: [] };
 }
 
-export const CreateProductInput: MessageFns<CreateProductInput> = {
-  encode(message: CreateProductInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const ProductInput: MessageFns<ProductInput> = {
+  encode(message: ProductInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
     }
     if (message.description !== "") {
       writer.uint32(18).string(message.description);
     }
-    if (message.storeId !== "") {
-      writer.uint32(26).string(message.storeId);
-    }
     if (message.categoryId !== "") {
-      writer.uint32(34).string(message.categoryId);
+      writer.uint32(26).string(message.categoryId);
     }
     for (const v of message.tags) {
-      writer.uint32(42).string(v!);
-    }
-    if (message.variant !== undefined) {
-      ProductVariantInput.encode(message.variant, writer.uint32(50).fork()).join();
+      writer.uint32(34).string(v!);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): CreateProductInput {
+  decode(input: BinaryReader | Uint8Array, length?: number): ProductInput {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCreateProductInput();
+    const message = createBaseProductInput();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -1142,33 +1455,17 @@ export const CreateProductInput: MessageFns<CreateProductInput> = {
             break;
           }
 
-          message.storeId = reader.string();
+          message.categoryId = reader.string();
           continue;
         }
         case 4: {
           if (tag !== 34) {
-            break;
-          }
-
-          message.categoryId = reader.string();
-          continue;
-        }
-        case 5: {
-          if (tag !== 42) {
             break;
           }
 
           message.tags.push(reader.string());
           continue;
         }
-        case 6: {
-          if (tag !== 50) {
-            break;
-          }
-
-          message.variant = ProductVariantInput.decode(reader, reader.uint32());
-          continue;
-        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1179,31 +1476,31 @@ export const CreateProductInput: MessageFns<CreateProductInput> = {
   },
 };
 
-function createBaseProductVariantInput(): ProductVariantInput {
-  return { sku: "", price: 0, stock: 0, attributes: [] };
+function createBasePartialProductInput(): PartialProductInput {
+  return { tags: [] };
 }
 
-export const ProductVariantInput: MessageFns<ProductVariantInput> = {
-  encode(message: ProductVariantInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.sku !== "") {
-      writer.uint32(10).string(message.sku);
+export const PartialProductInput: MessageFns<PartialProductInput> = {
+  encode(message: PartialProductInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.name !== undefined) {
+      writer.uint32(10).string(message.name);
     }
-    if (message.price !== 0) {
-      writer.uint32(16).int32(message.price);
+    if (message.description !== undefined) {
+      writer.uint32(18).string(message.description);
     }
-    if (message.stock !== 0) {
-      writer.uint32(24).int32(message.stock);
+    if (message.categoryId !== undefined) {
+      writer.uint32(26).string(message.categoryId);
     }
-    for (const v of message.attributes) {
-      VariantAttributeInput.encode(v!, writer.uint32(34).fork()).join();
+    for (const v of message.tags) {
+      writer.uint32(34).string(v!);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): ProductVariantInput {
+  decode(input: BinaryReader | Uint8Array, length?: number): PartialProductInput {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseProductVariantInput();
+    const message = createBasePartialProductInput();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -1212,71 +1509,7 @@ export const ProductVariantInput: MessageFns<ProductVariantInput> = {
             break;
           }
 
-          message.sku = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.price = reader.int32();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.stock = reader.int32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.attributes.push(VariantAttributeInput.decode(reader, reader.uint32()));
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseVariantAttributeInput(): VariantAttributeInput {
-  return { key: "", value: "" };
-}
-
-export const VariantAttributeInput: MessageFns<VariantAttributeInput> = {
-  encode(message: VariantAttributeInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.key !== "") {
-      writer.uint32(10).string(message.key);
-    }
-    if (message.value !== "") {
-      writer.uint32(18).string(message.value);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): VariantAttributeInput {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseVariantAttributeInput();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.key = reader.string();
+          message.name = reader.string();
           continue;
         }
         case 2: {
@@ -1284,7 +1517,82 @@ export const VariantAttributeInput: MessageFns<VariantAttributeInput> = {
             break;
           }
 
-          message.value = reader.string();
+          message.description = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.categoryId = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.tags.push(reader.string());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseCreateProductInput(): CreateProductInput {
+  return { storeId: "", data: undefined, variants: [] };
+}
+
+export const CreateProductInput: MessageFns<CreateProductInput> = {
+  encode(message: CreateProductInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.storeId !== "") {
+      writer.uint32(10).string(message.storeId);
+    }
+    if (message.data !== undefined) {
+      ProductInput.encode(message.data, writer.uint32(18).fork()).join();
+    }
+    for (const v of message.variants) {
+      VariantInput.encode(v!, writer.uint32(26).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateProductInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateProductInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.storeId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.data = ProductInput.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.variants.push(VariantInput.decode(reader, reader.uint32()));
           continue;
         }
       }
@@ -1298,7 +1606,7 @@ export const VariantAttributeInput: MessageFns<VariantAttributeInput> = {
 };
 
 function createBaseUpdateProductInput(): UpdateProductInput {
-  return { id: "" };
+  return { id: "", data: undefined };
 }
 
 export const UpdateProductInput: MessageFns<UpdateProductInput> = {
@@ -1306,11 +1614,8 @@ export const UpdateProductInput: MessageFns<UpdateProductInput> = {
     if (message.id !== "") {
       writer.uint32(10).string(message.id);
     }
-    if (message.name !== undefined) {
-      writer.uint32(18).string(message.name);
-    }
-    if (message.description !== undefined) {
-      writer.uint32(26).string(message.description);
+    if (message.data !== undefined) {
+      PartialProductInput.encode(message.data, writer.uint32(18).fork()).join();
     }
     return writer;
   },
@@ -1335,15 +1640,7 @@ export const UpdateProductInput: MessageFns<UpdateProductInput> = {
             break;
           }
 
-          message.name = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.description = reader.string();
+          message.data = PartialProductInput.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -1357,7 +1654,7 @@ export const UpdateProductInput: MessageFns<UpdateProductInput> = {
 };
 
 function createBaseProductStore(): ProductStore {
-  return { id: "", name: "" };
+  return { id: "", name: "", logo: "" };
 }
 
 export const ProductStore: MessageFns<ProductStore> = {
@@ -1367,6 +1664,9 @@ export const ProductStore: MessageFns<ProductStore> = {
     }
     if (message.name !== "") {
       writer.uint32(18).string(message.name);
+    }
+    if (message.logo !== "") {
+      writer.uint32(26).string(message.logo);
     }
     return writer;
   },
@@ -1392,6 +1692,14 @@ export const ProductStore: MessageFns<ProductStore> = {
           }
 
           message.name = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.logo = reader.string();
           continue;
         }
       }
@@ -1796,8 +2104,303 @@ export const ProductList: MessageFns<ProductList> = {
   },
 };
 
+function createBaseProductOrderBy(): ProductOrderBy {
+  return {};
+}
+
+export const ProductOrderBy: MessageFns<ProductOrderBy> = {
+  encode(message: ProductOrderBy, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.name !== undefined) {
+      writer.uint32(10).string(message.name);
+    }
+    if (message.createdAt !== undefined) {
+      writer.uint32(18).string(message.createdAt);
+    }
+    if (message.updatedAt !== undefined) {
+      writer.uint32(26).string(message.updatedAt);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProductOrderBy {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProductOrderBy();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.updatedAt = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseListProductInput(): ListProductInput {
+  return {};
+}
+
+export const ListProductInput: MessageFns<ListProductInput> = {
+  encode(message: ListProductInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.orderBy !== undefined) {
+      ProductOrderBy.encode(message.orderBy, writer.uint32(10).fork()).join();
+    }
+    if (message.skip !== undefined) {
+      writer.uint32(16).int32(message.skip);
+    }
+    if (message.take !== undefined) {
+      writer.uint32(24).int32(message.take);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListProductInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListProductInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.orderBy = ProductOrderBy.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.skip = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.take = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseListProductByRelationInput(): ListProductByRelationInput {
+  return { id: "" };
+}
+
+export const ListProductByRelationInput: MessageFns<ListProductByRelationInput> = {
+  encode(message: ListProductByRelationInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.params !== undefined) {
+      ListProductInput.encode(message.params, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListProductByRelationInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListProductByRelationInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.params = ListProductInput.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseVariantInput(): VariantInput {
+  return { sku: "", price: 0, stock: 0, attributes: [] };
+}
+
+export const VariantInput: MessageFns<VariantInput> = {
+  encode(message: VariantInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.sku !== "") {
+      writer.uint32(10).string(message.sku);
+    }
+    if (message.price !== 0) {
+      writer.uint32(16).int32(message.price);
+    }
+    if (message.stock !== 0) {
+      writer.uint32(24).int32(message.stock);
+    }
+    for (const v of message.attributes) {
+      AttributeInput.encode(v!, writer.uint32(34).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): VariantInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVariantInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.sku = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.price = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.stock = reader.int32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.attributes.push(AttributeInput.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBasePartialVariantInput(): PartialVariantInput {
+  return {};
+}
+
+export const PartialVariantInput: MessageFns<PartialVariantInput> = {
+  encode(message: PartialVariantInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.sku !== undefined) {
+      writer.uint32(10).string(message.sku);
+    }
+    if (message.price !== undefined) {
+      writer.uint32(16).int32(message.price);
+    }
+    if (message.stock !== undefined) {
+      writer.uint32(24).int32(message.stock);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PartialVariantInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePartialVariantInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.sku = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.price = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.stock = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
 function createBaseCreateVariantInput(): CreateVariantInput {
-  return { productId: "", sku: "", price: 0, stock: 0 };
+  return { productId: "", data: undefined };
 }
 
 export const CreateVariantInput: MessageFns<CreateVariantInput> = {
@@ -1805,14 +2408,8 @@ export const CreateVariantInput: MessageFns<CreateVariantInput> = {
     if (message.productId !== "") {
       writer.uint32(10).string(message.productId);
     }
-    if (message.sku !== "") {
-      writer.uint32(18).string(message.sku);
-    }
-    if (message.price !== 0) {
-      writer.uint32(24).int32(message.price);
-    }
-    if (message.stock !== 0) {
-      writer.uint32(32).int32(message.stock);
+    if (message.data !== undefined) {
+      VariantInput.encode(message.data, writer.uint32(18).fork()).join();
     }
     return writer;
   },
@@ -1837,23 +2434,7 @@ export const CreateVariantInput: MessageFns<CreateVariantInput> = {
             break;
           }
 
-          message.sku = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.price = reader.int32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.stock = reader.int32();
+          message.data = VariantInput.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -1867,7 +2448,7 @@ export const CreateVariantInput: MessageFns<CreateVariantInput> = {
 };
 
 function createBaseUpdateVariantInput(): UpdateVariantInput {
-  return { id: "" };
+  return { id: "", data: undefined };
 }
 
 export const UpdateVariantInput: MessageFns<UpdateVariantInput> = {
@@ -1875,11 +2456,8 @@ export const UpdateVariantInput: MessageFns<UpdateVariantInput> = {
     if (message.id !== "") {
       writer.uint32(10).string(message.id);
     }
-    if (message.sku !== undefined) {
-      writer.uint32(18).string(message.sku);
-    }
-    if (message.price !== undefined) {
-      writer.uint32(24).int32(message.price);
+    if (message.data !== undefined) {
+      PartialVariantInput.encode(message.data, writer.uint32(18).fork()).join();
     }
     return writer;
   },
@@ -1904,15 +2482,7 @@ export const UpdateVariantInput: MessageFns<UpdateVariantInput> = {
             break;
           }
 
-          message.sku = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.price = reader.int32();
+          message.data = PartialVariantInput.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -2039,43 +2609,6 @@ export const Variant: MessageFns<Variant> = {
   },
 };
 
-function createBaseVariantId(): VariantId {
-  return { id: "" };
-}
-
-export const VariantId: MessageFns<VariantId> = {
-  encode(message: VariantId, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): VariantId {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseVariantId();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.id = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
 function createBaseVariantList(): VariantList {
   return { variants: [] };
 }
@@ -2113,12 +2646,180 @@ export const VariantList: MessageFns<VariantList> = {
   },
 };
 
+function createBaseVariantOrderBy(): VariantOrderBy {
+  return {};
+}
+
+export const VariantOrderBy: MessageFns<VariantOrderBy> = {
+  encode(message: VariantOrderBy, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.price !== undefined) {
+      writer.uint32(8).int32(message.price);
+    }
+    if (message.createdAt !== undefined) {
+      writer.uint32(18).string(message.createdAt);
+    }
+    if (message.updatedAt !== undefined) {
+      writer.uint32(26).string(message.updatedAt);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): VariantOrderBy {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVariantOrderBy();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.price = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.updatedAt = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseListVariantInput(): ListVariantInput {
+  return {};
+}
+
+export const ListVariantInput: MessageFns<ListVariantInput> = {
+  encode(message: ListVariantInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.orderBy !== undefined) {
+      VariantOrderBy.encode(message.orderBy, writer.uint32(10).fork()).join();
+    }
+    if (message.skip !== undefined) {
+      writer.uint32(16).int32(message.skip);
+    }
+    if (message.take !== undefined) {
+      writer.uint32(24).int32(message.take);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListVariantInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListVariantInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.orderBy = VariantOrderBy.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.skip = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.take = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseListVariantByRelationInput(): ListVariantByRelationInput {
+  return { id: "" };
+}
+
+export const ListVariantByRelationInput: MessageFns<ListVariantByRelationInput> = {
+  encode(message: ListVariantByRelationInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.params !== undefined) {
+      ListVariantInput.encode(message.params, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ListVariantByRelationInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseListVariantByRelationInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.params = ListVariantInput.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
 export interface AttributeServiceClient {
   create(request: CreateAttributeInput): Observable<Attribute>;
 
   get(request: Id): Observable<Attribute>;
 
-  list(request: FindAttributeInput): Observable<AttributeList>;
+  list(request: ListAttributeInput): Observable<AttributeList>;
+
+  listVariantAttributes(request: ListAttributeByRelationInput): Observable<AttributeList>;
 
   update(request: UpdateAttributeInput): Observable<Attribute>;
 
@@ -2130,7 +2831,11 @@ export interface AttributeServiceController {
 
   get(request: Id): Promise<Attribute> | Observable<Attribute> | Attribute;
 
-  list(request: FindAttributeInput): Promise<AttributeList> | Observable<AttributeList> | AttributeList;
+  list(request: ListAttributeInput): Promise<AttributeList> | Observable<AttributeList> | AttributeList;
+
+  listVariantAttributes(
+    request: ListAttributeByRelationInput,
+  ): Promise<AttributeList> | Observable<AttributeList> | AttributeList;
 
   update(request: UpdateAttributeInput): Promise<Attribute> | Observable<Attribute> | Attribute;
 
@@ -2139,7 +2844,7 @@ export interface AttributeServiceController {
 
 export function AttributeServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["create", "get", "list", "update", "delete"];
+    const grpcMethods: string[] = ["create", "get", "list", "listVariantAttributes", "update", "delete"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("AttributeService", method)(constructor.prototype[method], method, descriptor);
@@ -2178,8 +2883,18 @@ export const AttributeServiceService = {
     path: "/product.AttributeService/List",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: FindAttributeInput) => Buffer.from(FindAttributeInput.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => FindAttributeInput.decode(value),
+    requestSerialize: (value: ListAttributeInput) => Buffer.from(ListAttributeInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ListAttributeInput.decode(value),
+    responseSerialize: (value: AttributeList) => Buffer.from(AttributeList.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => AttributeList.decode(value),
+  },
+  listVariantAttributes: {
+    path: "/product.AttributeService/ListVariantAttributes",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ListAttributeByRelationInput) =>
+      Buffer.from(ListAttributeByRelationInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ListAttributeByRelationInput.decode(value),
     responseSerialize: (value: AttributeList) => Buffer.from(AttributeList.encode(value).finish()),
     responseDeserialize: (value: Buffer) => AttributeList.decode(value),
   },
@@ -2206,7 +2921,8 @@ export const AttributeServiceService = {
 export interface AttributeServiceServer extends UntypedServiceImplementation {
   create: handleUnaryCall<CreateAttributeInput, Attribute>;
   get: handleUnaryCall<Id, Attribute>;
-  list: handleUnaryCall<FindAttributeInput, AttributeList>;
+  list: handleUnaryCall<ListAttributeInput, AttributeList>;
+  listVariantAttributes: handleUnaryCall<ListAttributeByRelationInput, AttributeList>;
   update: handleUnaryCall<UpdateAttributeInput, Attribute>;
   delete: handleUnaryCall<Id, Status>;
 }
@@ -2218,7 +2934,9 @@ export interface CategoryServiceClient {
 
   getByName(request: Name): Observable<Category>;
 
-  list(request: FindCategoryInput): Observable<CategoryList>;
+  list(request: ListCategoryInput): Observable<CategoryList>;
+
+  listStoreCategories(request: ListCategoryByRelationInput): Observable<CategoryList>;
 
   update(request: UpdateCategoryInput): Observable<Category>;
 
@@ -2232,7 +2950,11 @@ export interface CategoryServiceController {
 
   getByName(request: Name): Promise<Category> | Observable<Category> | Category;
 
-  list(request: FindCategoryInput): Promise<CategoryList> | Observable<CategoryList> | CategoryList;
+  list(request: ListCategoryInput): Promise<CategoryList> | Observable<CategoryList> | CategoryList;
+
+  listStoreCategories(
+    request: ListCategoryByRelationInput,
+  ): Promise<CategoryList> | Observable<CategoryList> | CategoryList;
 
   update(request: UpdateCategoryInput): Promise<Category> | Observable<Category> | Category;
 
@@ -2241,7 +2963,7 @@ export interface CategoryServiceController {
 
 export function CategoryServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["create", "getById", "getByName", "list", "update", "delete"];
+    const grpcMethods: string[] = ["create", "getById", "getByName", "list", "listStoreCategories", "update", "delete"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("CategoryService", method)(constructor.prototype[method], method, descriptor);
@@ -2289,8 +3011,18 @@ export const CategoryServiceService = {
     path: "/product.CategoryService/List",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: FindCategoryInput) => Buffer.from(FindCategoryInput.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => FindCategoryInput.decode(value),
+    requestSerialize: (value: ListCategoryInput) => Buffer.from(ListCategoryInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ListCategoryInput.decode(value),
+    responseSerialize: (value: CategoryList) => Buffer.from(CategoryList.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => CategoryList.decode(value),
+  },
+  listStoreCategories: {
+    path: "/product.CategoryService/ListStoreCategories",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ListCategoryByRelationInput) =>
+      Buffer.from(ListCategoryByRelationInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ListCategoryByRelationInput.decode(value),
     responseSerialize: (value: CategoryList) => Buffer.from(CategoryList.encode(value).finish()),
     responseDeserialize: (value: Buffer) => CategoryList.decode(value),
   },
@@ -2318,21 +3050,22 @@ export interface CategoryServiceServer extends UntypedServiceImplementation {
   create: handleUnaryCall<CreateCategoryInput, Category>;
   getById: handleUnaryCall<Id, Category>;
   getByName: handleUnaryCall<Name, Category>;
-  list: handleUnaryCall<FindCategoryInput, CategoryList>;
+  list: handleUnaryCall<ListCategoryInput, CategoryList>;
+  listStoreCategories: handleUnaryCall<ListCategoryByRelationInput, CategoryList>;
   update: handleUnaryCall<UpdateCategoryInput, Category>;
   delete: handleUnaryCall<Id, Status>;
 }
 
 export interface ProductServiceClient {
-  create(request: CreateProductInput): Observable<Status>;
+  create(request: CreateProductInput): Observable<Product>;
 
-  get(request: Id): Observable<Product>;
+  get(request: Id): Observable<ProductWithRelationships>;
 
-  getStoreProducts(request: Id): Observable<ProductList>;
+  listStoreProducts(request: ListProductByRelationInput): Observable<ProductList>;
 
-  getCategoryProducts(request: Id): Observable<ProductList>;
+  listCategoryProducts(request: ListProductByRelationInput): Observable<ProductList>;
 
-  list(request: Empty): Observable<ProductList>;
+  list(request: ListProductInput): Observable<ProductList>;
 
   update(request: UpdateProductInput): Observable<Status>;
 
@@ -2340,15 +3073,17 @@ export interface ProductServiceClient {
 }
 
 export interface ProductServiceController {
-  create(request: CreateProductInput): Promise<Status> | Observable<Status> | Status;
+  create(request: CreateProductInput): Promise<Product> | Observable<Product> | Product;
 
-  get(request: Id): Promise<Product> | Observable<Product> | Product;
+  get(request: Id): Promise<ProductWithRelationships> | Observable<ProductWithRelationships> | ProductWithRelationships;
 
-  getStoreProducts(request: Id): Promise<ProductList> | Observable<ProductList> | ProductList;
+  listStoreProducts(request: ListProductByRelationInput): Promise<ProductList> | Observable<ProductList> | ProductList;
 
-  getCategoryProducts(request: Id): Promise<ProductList> | Observable<ProductList> | ProductList;
+  listCategoryProducts(
+    request: ListProductByRelationInput,
+  ): Promise<ProductList> | Observable<ProductList> | ProductList;
 
-  list(request: Empty): Promise<ProductList> | Observable<ProductList> | ProductList;
+  list(request: ListProductInput): Promise<ProductList> | Observable<ProductList> | ProductList;
 
   update(request: UpdateProductInput): Promise<Status> | Observable<Status> | Status;
 
@@ -2360,8 +3095,8 @@ export function ProductServiceControllerMethods() {
     const grpcMethods: string[] = [
       "create",
       "get",
-      "getStoreProducts",
-      "getCategoryProducts",
+      "listStoreProducts",
+      "listCategoryProducts",
       "list",
       "update",
       "delete",
@@ -2388,8 +3123,8 @@ export const ProductServiceService = {
     responseStream: false,
     requestSerialize: (value: CreateProductInput) => Buffer.from(CreateProductInput.encode(value).finish()),
     requestDeserialize: (value: Buffer) => CreateProductInput.decode(value),
-    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Status.decode(value),
+    responseSerialize: (value: Product) => Buffer.from(Product.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Product.decode(value),
   },
   get: {
     path: "/product.ProductService/Get",
@@ -2397,24 +3132,27 @@ export const ProductServiceService = {
     responseStream: false,
     requestSerialize: (value: Id) => Buffer.from(Id.encode(value).finish()),
     requestDeserialize: (value: Buffer) => Id.decode(value),
-    responseSerialize: (value: Product) => Buffer.from(Product.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Product.decode(value),
+    responseSerialize: (value: ProductWithRelationships) =>
+      Buffer.from(ProductWithRelationships.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => ProductWithRelationships.decode(value),
   },
-  getStoreProducts: {
-    path: "/product.ProductService/GetStoreProducts",
+  listStoreProducts: {
+    path: "/product.ProductService/ListStoreProducts",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: Id) => Buffer.from(Id.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => Id.decode(value),
+    requestSerialize: (value: ListProductByRelationInput) =>
+      Buffer.from(ListProductByRelationInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ListProductByRelationInput.decode(value),
     responseSerialize: (value: ProductList) => Buffer.from(ProductList.encode(value).finish()),
     responseDeserialize: (value: Buffer) => ProductList.decode(value),
   },
-  getCategoryProducts: {
-    path: "/product.ProductService/GetCategoryProducts",
+  listCategoryProducts: {
+    path: "/product.ProductService/ListCategoryProducts",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: Id) => Buffer.from(Id.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => Id.decode(value),
+    requestSerialize: (value: ListProductByRelationInput) =>
+      Buffer.from(ListProductByRelationInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ListProductByRelationInput.decode(value),
     responseSerialize: (value: ProductList) => Buffer.from(ProductList.encode(value).finish()),
     responseDeserialize: (value: Buffer) => ProductList.decode(value),
   },
@@ -2422,8 +3160,8 @@ export const ProductServiceService = {
     path: "/product.ProductService/List",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => Empty.decode(value),
+    requestSerialize: (value: ListProductInput) => Buffer.from(ListProductInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ListProductInput.decode(value),
     responseSerialize: (value: ProductList) => Buffer.from(ProductList.encode(value).finish()),
     responseDeserialize: (value: Buffer) => ProductList.decode(value),
   },
@@ -2448,11 +3186,11 @@ export const ProductServiceService = {
 } as const;
 
 export interface ProductServiceServer extends UntypedServiceImplementation {
-  create: handleUnaryCall<CreateProductInput, Status>;
-  get: handleUnaryCall<Id, Product>;
-  getStoreProducts: handleUnaryCall<Id, ProductList>;
-  getCategoryProducts: handleUnaryCall<Id, ProductList>;
-  list: handleUnaryCall<Empty, ProductList>;
+  create: handleUnaryCall<CreateProductInput, Product>;
+  get: handleUnaryCall<Id, ProductWithRelationships>;
+  listStoreProducts: handleUnaryCall<ListProductByRelationInput, ProductList>;
+  listCategoryProducts: handleUnaryCall<ListProductByRelationInput, ProductList>;
+  list: handleUnaryCall<ListProductInput, ProductList>;
   update: handleUnaryCall<UpdateProductInput, Status>;
   delete: handleUnaryCall<Id, Status>;
 }
@@ -2462,13 +3200,13 @@ export interface VariantServiceClient {
 
   get(request: Id): Observable<Variant>;
 
-  getProductVariants(request: Id): Observable<VariantList>;
+  listProductVariants(request: ListVariantByRelationInput): Observable<VariantList>;
 
-  list(request: Empty): Observable<VariantList>;
+  list(request: ListVariantInput): Observable<VariantList>;
 
   update(request: UpdateVariantInput): Observable<Status>;
 
-  delete(request: VariantId): Observable<Status>;
+  delete(request: Id): Observable<Status>;
 }
 
 export interface VariantServiceController {
@@ -2476,18 +3214,20 @@ export interface VariantServiceController {
 
   get(request: Id): Promise<Variant> | Observable<Variant> | Variant;
 
-  getProductVariants(request: Id): Promise<VariantList> | Observable<VariantList> | VariantList;
+  listProductVariants(
+    request: ListVariantByRelationInput,
+  ): Promise<VariantList> | Observable<VariantList> | VariantList;
 
-  list(request: Empty): Promise<VariantList> | Observable<VariantList> | VariantList;
+  list(request: ListVariantInput): Promise<VariantList> | Observable<VariantList> | VariantList;
 
   update(request: UpdateVariantInput): Promise<Status> | Observable<Status> | Status;
 
-  delete(request: VariantId): Promise<Status> | Observable<Status> | Status;
+  delete(request: Id): Promise<Status> | Observable<Status> | Status;
 }
 
 export function VariantServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["create", "get", "getProductVariants", "list", "update", "delete"];
+    const grpcMethods: string[] = ["create", "get", "listProductVariants", "list", "update", "delete"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("VariantService", method)(constructor.prototype[method], method, descriptor);
@@ -2522,12 +3262,13 @@ export const VariantServiceService = {
     responseSerialize: (value: Variant) => Buffer.from(Variant.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Variant.decode(value),
   },
-  getProductVariants: {
-    path: "/product.VariantService/GetProductVariants",
+  listProductVariants: {
+    path: "/product.VariantService/ListProductVariants",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: Id) => Buffer.from(Id.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => Id.decode(value),
+    requestSerialize: (value: ListVariantByRelationInput) =>
+      Buffer.from(ListVariantByRelationInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ListVariantByRelationInput.decode(value),
     responseSerialize: (value: VariantList) => Buffer.from(VariantList.encode(value).finish()),
     responseDeserialize: (value: Buffer) => VariantList.decode(value),
   },
@@ -2535,8 +3276,8 @@ export const VariantServiceService = {
     path: "/product.VariantService/List",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => Empty.decode(value),
+    requestSerialize: (value: ListVariantInput) => Buffer.from(ListVariantInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ListVariantInput.decode(value),
     responseSerialize: (value: VariantList) => Buffer.from(VariantList.encode(value).finish()),
     responseDeserialize: (value: Buffer) => VariantList.decode(value),
   },
@@ -2553,8 +3294,8 @@ export const VariantServiceService = {
     path: "/product.VariantService/Delete",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: VariantId) => Buffer.from(VariantId.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => VariantId.decode(value),
+    requestSerialize: (value: Id) => Buffer.from(Id.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => Id.decode(value),
     responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
     responseDeserialize: (value: Buffer) => Status.decode(value),
   },
@@ -2563,10 +3304,10 @@ export const VariantServiceService = {
 export interface VariantServiceServer extends UntypedServiceImplementation {
   create: handleUnaryCall<CreateVariantInput, Status>;
   get: handleUnaryCall<Id, Variant>;
-  getProductVariants: handleUnaryCall<Id, VariantList>;
-  list: handleUnaryCall<Empty, VariantList>;
+  listProductVariants: handleUnaryCall<ListVariantByRelationInput, VariantList>;
+  list: handleUnaryCall<ListVariantInput, VariantList>;
   update: handleUnaryCall<UpdateVariantInput, Status>;
-  delete: handleUnaryCall<VariantId, Status>;
+  delete: handleUnaryCall<Id, Status>;
 }
 
 export interface MessageFns<T> {

@@ -13,72 +13,155 @@ import { Empty } from "./google/protobuf/empty";
 
 export const protobufPackage = "auth";
 
+export interface IdInput {
+  id: string;
+}
+
 export interface Status {
   success: boolean;
 }
 
-export interface UpdatePasswordInput {
-  id: string;
-  oldPassword: string;
-  newPassword: string;
-}
-
-export interface UpdateEmailInput {
-  id: string;
-  email: string;
-}
-
-export interface UserRoleInput {
+export interface RegisterData {
   userId: string;
-  roleId: string;
-}
-
-export interface HealthCheckResponse {
-  status: string;
-  timestamp: string;
-}
-
-export interface Token {
-  token: string;
-  expiresIn: number;
-}
-
-export interface AuthInput {
   email: string;
   password: string;
 }
 
-export interface AuthResponse {
-  access: Token | undefined;
-  refresh: Token | undefined;
+export interface RegisterRequest {
+  data: RegisterData | undefined;
+  userAgent: string;
+  ipAddress: string;
 }
 
-export interface Role {
+export interface AuthResponse {
+  access: AuthToken | undefined;
+  refresh: AuthToken | undefined;
+}
+
+export interface AuthToken {
+  token: string;
+  expiresIn: number;
+}
+
+export interface ChangePasswordData {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordRequest {
+  id: string;
+  data: ChangePasswordData | undefined;
+}
+
+export interface RequestPasswordResetMessage {
+  id: string;
+  email: string;
+}
+
+export interface ResetPasswordMessage {
+  token: string;
+  password: string;
+}
+
+export interface EmailData {
+  email: string;
+}
+
+export interface ChangeEmailRequest {
+  id: string;
+  data: EmailData | undefined;
+}
+
+export interface TokenRequest {
+  token: string;
+}
+
+export interface IsEmailVerifiedResponse {
+  verified: boolean;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export interface LoginRequest {
+  data: LoginData | undefined;
+  userAgent: string;
+  ipAddress: string;
+}
+
+export interface SessionData {
+  id: string;
+  userAgent: string;
+  ipAddress: string;
+  createdAt: string;
+}
+
+export interface SessionList {
+  sessions: SessionData[];
+}
+
+export interface CreateRoleInput {
+  name: string;
+}
+
+export interface UpdateRoleData {
+  name: string;
+}
+
+export interface UpdateRoleInput {
+  id: string;
+  data: UpdateRoleData | undefined;
+}
+
+export interface RoleData {
   id: string;
   name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface RoleList {
-  roles: Role[];
-}
-
-export interface RoleById {
-  id: string;
-}
-
-export interface RoleByName {
-  name: string;
-}
-
-export interface RoleInput {
-  name: string;
-  description: string;
+  roles: RoleData[];
 }
 
 export const AUTH_PACKAGE_NAME = "auth";
+
+function createBaseIdInput(): IdInput {
+  return { id: "" };
+}
+
+export const IdInput: MessageFns<IdInput> = {
+  encode(message: IdInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): IdInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseIdInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
 
 function createBaseStatus(): Status {
   return { success: false };
@@ -117,132 +200,28 @@ export const Status: MessageFns<Status> = {
   },
 };
 
-function createBaseUpdatePasswordInput(): UpdatePasswordInput {
-  return { id: "", oldPassword: "", newPassword: "" };
+function createBaseRegisterData(): RegisterData {
+  return { userId: "", email: "", password: "" };
 }
 
-export const UpdatePasswordInput: MessageFns<UpdatePasswordInput> = {
-  encode(message: UpdatePasswordInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
-    }
-    if (message.oldPassword !== "") {
-      writer.uint32(18).string(message.oldPassword);
-    }
-    if (message.newPassword !== "") {
-      writer.uint32(26).string(message.newPassword);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): UpdatePasswordInput {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseUpdatePasswordInput();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.oldPassword = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.newPassword = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseUpdateEmailInput(): UpdateEmailInput {
-  return { id: "", email: "" };
-}
-
-export const UpdateEmailInput: MessageFns<UpdateEmailInput> = {
-  encode(message: UpdateEmailInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
+export const RegisterData: MessageFns<RegisterData> = {
+  encode(message: RegisterData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.userId !== "") {
+      writer.uint32(10).string(message.userId);
     }
     if (message.email !== "") {
       writer.uint32(18).string(message.email);
     }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): UpdateEmailInput {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseUpdateEmailInput();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.id = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.email = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseUserRoleInput(): UserRoleInput {
-  return { userId: "", roleId: "" };
-}
-
-export const UserRoleInput: MessageFns<UserRoleInput> = {
-  encode(message: UserRoleInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.userId !== "") {
-      writer.uint32(10).string(message.userId);
-    }
-    if (message.roleId !== "") {
-      writer.uint32(18).string(message.roleId);
+    if (message.password !== "") {
+      writer.uint32(26).string(message.password);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): UserRoleInput {
+  decode(input: BinaryReader | Uint8Array, length?: number): RegisterData {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseUserRoleInput();
+    const message = createBaseRegisterData();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -259,7 +238,15 @@ export const UserRoleInput: MessageFns<UserRoleInput> = {
             break;
           }
 
-          message.roleId = reader.string();
+          message.email = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.password = reader.string();
           continue;
         }
       }
@@ -272,25 +259,28 @@ export const UserRoleInput: MessageFns<UserRoleInput> = {
   },
 };
 
-function createBaseHealthCheckResponse(): HealthCheckResponse {
-  return { status: "", timestamp: "" };
+function createBaseRegisterRequest(): RegisterRequest {
+  return { data: undefined, userAgent: "", ipAddress: "" };
 }
 
-export const HealthCheckResponse: MessageFns<HealthCheckResponse> = {
-  encode(message: HealthCheckResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.status !== "") {
-      writer.uint32(10).string(message.status);
+export const RegisterRequest: MessageFns<RegisterRequest> = {
+  encode(message: RegisterRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.data !== undefined) {
+      RegisterData.encode(message.data, writer.uint32(10).fork()).join();
     }
-    if (message.timestamp !== "") {
-      writer.uint32(18).string(message.timestamp);
+    if (message.userAgent !== "") {
+      writer.uint32(18).string(message.userAgent);
+    }
+    if (message.ipAddress !== "") {
+      writer.uint32(26).string(message.ipAddress);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): HealthCheckResponse {
+  decode(input: BinaryReader | Uint8Array, length?: number): RegisterRequest {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseHealthCheckResponse();
+    const message = createBaseRegisterRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -299,7 +289,7 @@ export const HealthCheckResponse: MessageFns<HealthCheckResponse> = {
             break;
           }
 
-          message.status = reader.string();
+          message.data = RegisterData.decode(reader, reader.uint32());
           continue;
         }
         case 2: {
@@ -307,7 +297,15 @@ export const HealthCheckResponse: MessageFns<HealthCheckResponse> = {
             break;
           }
 
-          message.timestamp = reader.string();
+          message.userAgent = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.ipAddress = reader.string();
           continue;
         }
       }
@@ -320,12 +318,60 @@ export const HealthCheckResponse: MessageFns<HealthCheckResponse> = {
   },
 };
 
-function createBaseToken(): Token {
+function createBaseAuthResponse(): AuthResponse {
+  return { access: undefined, refresh: undefined };
+}
+
+export const AuthResponse: MessageFns<AuthResponse> = {
+  encode(message: AuthResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.access !== undefined) {
+      AuthToken.encode(message.access, writer.uint32(10).fork()).join();
+    }
+    if (message.refresh !== undefined) {
+      AuthToken.encode(message.refresh, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): AuthResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAuthResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.access = AuthToken.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.refresh = AuthToken.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseAuthToken(): AuthToken {
   return { token: "", expiresIn: 0 };
 }
 
-export const Token: MessageFns<Token> = {
-  encode(message: Token, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const AuthToken: MessageFns<AuthToken> = {
+  encode(message: AuthToken, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.token !== "") {
       writer.uint32(10).string(message.token);
     }
@@ -335,10 +381,10 @@ export const Token: MessageFns<Token> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): Token {
+  decode(input: BinaryReader | Uint8Array, length?: number): AuthToken {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseToken();
+    const message = createBaseAuthToken();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -368,12 +414,363 @@ export const Token: MessageFns<Token> = {
   },
 };
 
-function createBaseAuthInput(): AuthInput {
+function createBaseChangePasswordData(): ChangePasswordData {
+  return { oldPassword: "", newPassword: "" };
+}
+
+export const ChangePasswordData: MessageFns<ChangePasswordData> = {
+  encode(message: ChangePasswordData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.oldPassword !== "") {
+      writer.uint32(10).string(message.oldPassword);
+    }
+    if (message.newPassword !== "") {
+      writer.uint32(18).string(message.newPassword);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ChangePasswordData {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseChangePasswordData();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.oldPassword = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.newPassword = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseChangePasswordRequest(): ChangePasswordRequest {
+  return { id: "", data: undefined };
+}
+
+export const ChangePasswordRequest: MessageFns<ChangePasswordRequest> = {
+  encode(message: ChangePasswordRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.data !== undefined) {
+      ChangePasswordData.encode(message.data, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ChangePasswordRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseChangePasswordRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.data = ChangePasswordData.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseRequestPasswordResetMessage(): RequestPasswordResetMessage {
+  return { id: "", email: "" };
+}
+
+export const RequestPasswordResetMessage: MessageFns<RequestPasswordResetMessage> = {
+  encode(message: RequestPasswordResetMessage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.email !== "") {
+      writer.uint32(18).string(message.email);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RequestPasswordResetMessage {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRequestPasswordResetMessage();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.email = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseResetPasswordMessage(): ResetPasswordMessage {
+  return { token: "", password: "" };
+}
+
+export const ResetPasswordMessage: MessageFns<ResetPasswordMessage> = {
+  encode(message: ResetPasswordMessage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.token !== "") {
+      writer.uint32(10).string(message.token);
+    }
+    if (message.password !== "") {
+      writer.uint32(18).string(message.password);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ResetPasswordMessage {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseResetPasswordMessage();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.token = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.password = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseEmailData(): EmailData {
+  return { email: "" };
+}
+
+export const EmailData: MessageFns<EmailData> = {
+  encode(message: EmailData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.email !== "") {
+      writer.uint32(10).string(message.email);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EmailData {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEmailData();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.email = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseChangeEmailRequest(): ChangeEmailRequest {
+  return { id: "", data: undefined };
+}
+
+export const ChangeEmailRequest: MessageFns<ChangeEmailRequest> = {
+  encode(message: ChangeEmailRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.data !== undefined) {
+      EmailData.encode(message.data, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ChangeEmailRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseChangeEmailRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.data = EmailData.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseTokenRequest(): TokenRequest {
+  return { token: "" };
+}
+
+export const TokenRequest: MessageFns<TokenRequest> = {
+  encode(message: TokenRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.token !== "") {
+      writer.uint32(10).string(message.token);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TokenRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTokenRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.token = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseIsEmailVerifiedResponse(): IsEmailVerifiedResponse {
+  return { verified: false };
+}
+
+export const IsEmailVerifiedResponse: MessageFns<IsEmailVerifiedResponse> = {
+  encode(message: IsEmailVerifiedResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.verified !== false) {
+      writer.uint32(8).bool(message.verified);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): IsEmailVerifiedResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseIsEmailVerifiedResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.verified = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseLoginData(): LoginData {
   return { email: "", password: "" };
 }
 
-export const AuthInput: MessageFns<AuthInput> = {
-  encode(message: AuthInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const LoginData: MessageFns<LoginData> = {
+  encode(message: LoginData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.email !== "") {
       writer.uint32(10).string(message.email);
     }
@@ -383,10 +780,10 @@ export const AuthInput: MessageFns<AuthInput> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): AuthInput {
+  decode(input: BinaryReader | Uint8Array, length?: number): LoginData {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseAuthInput();
+    const message = createBaseLoginData();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -416,25 +813,28 @@ export const AuthInput: MessageFns<AuthInput> = {
   },
 };
 
-function createBaseAuthResponse(): AuthResponse {
-  return { access: undefined, refresh: undefined };
+function createBaseLoginRequest(): LoginRequest {
+  return { data: undefined, userAgent: "", ipAddress: "" };
 }
 
-export const AuthResponse: MessageFns<AuthResponse> = {
-  encode(message: AuthResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.access !== undefined) {
-      Token.encode(message.access, writer.uint32(10).fork()).join();
+export const LoginRequest: MessageFns<LoginRequest> = {
+  encode(message: LoginRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.data !== undefined) {
+      LoginData.encode(message.data, writer.uint32(10).fork()).join();
     }
-    if (message.refresh !== undefined) {
-      Token.encode(message.refresh, writer.uint32(18).fork()).join();
+    if (message.userAgent !== "") {
+      writer.uint32(18).string(message.userAgent);
+    }
+    if (message.ipAddress !== "") {
+      writer.uint32(26).string(message.ipAddress);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): AuthResponse {
+  decode(input: BinaryReader | Uint8Array, length?: number): LoginRequest {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseAuthResponse();
+    const message = createBaseLoginRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -443,7 +843,7 @@ export const AuthResponse: MessageFns<AuthResponse> = {
             break;
           }
 
-          message.access = Token.decode(reader, reader.uint32());
+          message.data = LoginData.decode(reader, reader.uint32());
           continue;
         }
         case 2: {
@@ -451,7 +851,15 @@ export const AuthResponse: MessageFns<AuthResponse> = {
             break;
           }
 
-          message.refresh = Token.decode(reader, reader.uint32());
+          message.userAgent = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.ipAddress = reader.string();
           continue;
         }
       }
@@ -464,34 +872,254 @@ export const AuthResponse: MessageFns<AuthResponse> = {
   },
 };
 
-function createBaseRole(): Role {
-  return { id: "", name: "", description: "", createdAt: "", updatedAt: "" };
+function createBaseSessionData(): SessionData {
+  return { id: "", userAgent: "", ipAddress: "", createdAt: "" };
 }
 
-export const Role: MessageFns<Role> = {
-  encode(message: Role, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const SessionData: MessageFns<SessionData> = {
+  encode(message: SessionData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.userAgent !== "") {
+      writer.uint32(18).string(message.userAgent);
+    }
+    if (message.ipAddress !== "") {
+      writer.uint32(26).string(message.ipAddress);
+    }
+    if (message.createdAt !== "") {
+      writer.uint32(34).string(message.createdAt);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SessionData {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSessionData();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.userAgent = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.ipAddress = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.createdAt = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseSessionList(): SessionList {
+  return { sessions: [] };
+}
+
+export const SessionList: MessageFns<SessionList> = {
+  encode(message: SessionList, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.sessions) {
+      SessionData.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SessionList {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSessionList();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.sessions.push(SessionData.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseCreateRoleInput(): CreateRoleInput {
+  return { name: "" };
+}
+
+export const CreateRoleInput: MessageFns<CreateRoleInput> = {
+  encode(message: CreateRoleInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.name !== "") {
+      writer.uint32(10).string(message.name);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateRoleInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateRoleInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseUpdateRoleData(): UpdateRoleData {
+  return { name: "" };
+}
+
+export const UpdateRoleData: MessageFns<UpdateRoleData> = {
+  encode(message: UpdateRoleData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateRoleData {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateRoleData();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseUpdateRoleInput(): UpdateRoleInput {
+  return { id: "", data: undefined };
+}
+
+export const UpdateRoleInput: MessageFns<UpdateRoleInput> = {
+  encode(message: UpdateRoleInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.data !== undefined) {
+      UpdateRoleData.encode(message.data, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateRoleInput {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateRoleInput();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.data = UpdateRoleData.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseRoleData(): RoleData {
+  return { id: "", name: "" };
+}
+
+export const RoleData: MessageFns<RoleData> = {
+  encode(message: RoleData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.id !== "") {
       writer.uint32(10).string(message.id);
     }
     if (message.name !== "") {
       writer.uint32(18).string(message.name);
     }
-    if (message.description !== "") {
-      writer.uint32(26).string(message.description);
-    }
-    if (message.createdAt !== "") {
-      writer.uint32(34).string(message.createdAt);
-    }
-    if (message.updatedAt !== "") {
-      writer.uint32(42).string(message.updatedAt);
-    }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): Role {
+  decode(input: BinaryReader | Uint8Array, length?: number): RoleData {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRole();
+    const message = createBaseRoleData();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -509,30 +1137,6 @@ export const Role: MessageFns<Role> = {
           }
 
           message.name = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.description = reader.string();
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.createdAt = reader.string();
-          continue;
-        }
-        case 5: {
-          if (tag !== 42) {
-            break;
-          }
-
-          message.updatedAt = reader.string();
           continue;
         }
       }
@@ -552,7 +1156,7 @@ function createBaseRoleList(): RoleList {
 export const RoleList: MessageFns<RoleList> = {
   encode(message: RoleList, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     for (const v of message.roles) {
-      Role.encode(v!, writer.uint32(10).fork()).join();
+      RoleData.encode(v!, writer.uint32(10).fork()).join();
     }
     return writer;
   },
@@ -569,129 +1173,7 @@ export const RoleList: MessageFns<RoleList> = {
             break;
           }
 
-          message.roles.push(Role.decode(reader, reader.uint32()));
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseRoleById(): RoleById {
-  return { id: "" };
-}
-
-export const RoleById: MessageFns<RoleById> = {
-  encode(message: RoleById, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): RoleById {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRoleById();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.id = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseRoleByName(): RoleByName {
-  return { name: "" };
-}
-
-export const RoleByName: MessageFns<RoleByName> = {
-  encode(message: RoleByName, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.name !== "") {
-      writer.uint32(10).string(message.name);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): RoleByName {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRoleByName();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.name = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseRoleInput(): RoleInput {
-  return { name: "", description: "" };
-}
-
-export const RoleInput: MessageFns<RoleInput> = {
-  encode(message: RoleInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.name !== "") {
-      writer.uint32(10).string(message.name);
-    }
-    if (message.description !== "") {
-      writer.uint32(18).string(message.description);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): RoleInput {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRoleInput();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.name = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.description = reader.string();
+          message.roles.push(RoleData.decode(reader, reader.uint32()));
           continue;
         }
       }
@@ -705,24 +1187,32 @@ export const RoleInput: MessageFns<RoleInput> = {
 };
 
 export interface AuthServiceClient {
-  health(request: Empty): Observable<HealthCheckResponse>;
+  health(request: Empty): Observable<Status>;
 
-  register(request: AuthInput): Observable<AuthResponse>;
+  register(request: RegisterRequest): Observable<AuthResponse>;
 
-  login(request: AuthInput): Observable<AuthResponse>;
+  login(request: LoginRequest): Observable<AuthResponse>;
+
+  refreshToken(request: TokenRequest): Observable<AuthToken>;
+
+  logout(request: TokenRequest): Observable<Status>;
 }
 
 export interface AuthServiceController {
-  health(request: Empty): Promise<HealthCheckResponse> | Observable<HealthCheckResponse> | HealthCheckResponse;
+  health(request: Empty): Promise<Status> | Observable<Status> | Status;
 
-  register(request: AuthInput): Promise<AuthResponse> | Observable<AuthResponse> | AuthResponse;
+  register(request: RegisterRequest): Promise<AuthResponse> | Observable<AuthResponse> | AuthResponse;
 
-  login(request: AuthInput): Promise<AuthResponse> | Observable<AuthResponse> | AuthResponse;
+  login(request: LoginRequest): Promise<AuthResponse> | Observable<AuthResponse> | AuthResponse;
+
+  refreshToken(request: TokenRequest): Promise<AuthToken> | Observable<AuthToken> | AuthToken;
+
+  logout(request: TokenRequest): Promise<Status> | Observable<Status> | Status;
 }
 
 export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["health", "register", "login"];
+    const grpcMethods: string[] = ["health", "register", "login", "refreshToken", "logout"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("AuthService", method)(constructor.prototype[method], method, descriptor);
@@ -740,185 +1230,103 @@ export const AUTH_SERVICE_NAME = "AuthService";
 export type AuthServiceService = typeof AuthServiceService;
 export const AuthServiceService = {
   health: {
-    path: "/auth.AuthService/health",
+    path: "/auth.AuthService/Health",
     requestStream: false,
     responseStream: false,
     requestSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
     requestDeserialize: (value: Buffer) => Empty.decode(value),
-    responseSerialize: (value: HealthCheckResponse) => Buffer.from(HealthCheckResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => HealthCheckResponse.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
   },
   register: {
-    path: "/auth.AuthService/register",
+    path: "/auth.AuthService/Register",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: AuthInput) => Buffer.from(AuthInput.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => AuthInput.decode(value),
+    requestSerialize: (value: RegisterRequest) => Buffer.from(RegisterRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => RegisterRequest.decode(value),
     responseSerialize: (value: AuthResponse) => Buffer.from(AuthResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer) => AuthResponse.decode(value),
   },
   login: {
-    path: "/auth.AuthService/login",
+    path: "/auth.AuthService/Login",
     requestStream: false,
     responseStream: false,
-    requestSerialize: (value: AuthInput) => Buffer.from(AuthInput.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => AuthInput.decode(value),
+    requestSerialize: (value: LoginRequest) => Buffer.from(LoginRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => LoginRequest.decode(value),
     responseSerialize: (value: AuthResponse) => Buffer.from(AuthResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer) => AuthResponse.decode(value),
+  },
+  refreshToken: {
+    path: "/auth.AuthService/RefreshToken",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: TokenRequest) => Buffer.from(TokenRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => TokenRequest.decode(value),
+    responseSerialize: (value: AuthToken) => Buffer.from(AuthToken.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => AuthToken.decode(value),
+  },
+  logout: {
+    path: "/auth.AuthService/Logout",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: TokenRequest) => Buffer.from(TokenRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => TokenRequest.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
   },
 } as const;
 
 export interface AuthServiceServer extends UntypedServiceImplementation {
-  health: handleUnaryCall<Empty, HealthCheckResponse>;
-  register: handleUnaryCall<AuthInput, AuthResponse>;
-  login: handleUnaryCall<AuthInput, AuthResponse>;
-}
-
-export interface RoleServiceClient {
-  create(request: RoleInput): Observable<HealthCheckResponse>;
-
-  roles(request: Empty): Observable<RoleList>;
-
-  roleById(request: RoleById): Observable<Role>;
-
-  roleByName(request: RoleByName): Observable<Role>;
-
-  /** rpc update (RoleInput) returns (AuthResponse) {} */
-
-  delete(request: RoleById): Observable<Status>;
-
-  health(request: Empty): Observable<HealthCheckResponse>;
-}
-
-export interface RoleServiceController {
-  create(request: RoleInput): Promise<HealthCheckResponse> | Observable<HealthCheckResponse> | HealthCheckResponse;
-
-  roles(request: Empty): Promise<RoleList> | Observable<RoleList> | RoleList;
-
-  roleById(request: RoleById): Promise<Role> | Observable<Role> | Role;
-
-  roleByName(request: RoleByName): Promise<Role> | Observable<Role> | Role;
-
-  /** rpc update (RoleInput) returns (AuthResponse) {} */
-
-  delete(request: RoleById): Promise<Status> | Observable<Status> | Status;
-
-  health(request: Empty): Promise<HealthCheckResponse> | Observable<HealthCheckResponse> | HealthCheckResponse;
-}
-
-export function RoleServiceControllerMethods() {
-  return function (constructor: Function) {
-    const grpcMethods: string[] = ["create", "roles", "roleById", "roleByName", "delete", "health"];
-    for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("RoleService", method)(constructor.prototype[method], method, descriptor);
-    }
-    const grpcStreamMethods: string[] = [];
-    for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("RoleService", method)(constructor.prototype[method], method, descriptor);
-    }
-  };
-}
-
-export const ROLE_SERVICE_NAME = "RoleService";
-
-export type RoleServiceService = typeof RoleServiceService;
-export const RoleServiceService = {
-  create: {
-    path: "/auth.RoleService/create",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: RoleInput) => Buffer.from(RoleInput.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => RoleInput.decode(value),
-    responseSerialize: (value: HealthCheckResponse) => Buffer.from(HealthCheckResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => HealthCheckResponse.decode(value),
-  },
-  roles: {
-    path: "/auth.RoleService/roles",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => Empty.decode(value),
-    responseSerialize: (value: RoleList) => Buffer.from(RoleList.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => RoleList.decode(value),
-  },
-  roleById: {
-    path: "/auth.RoleService/roleById",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: RoleById) => Buffer.from(RoleById.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => RoleById.decode(value),
-    responseSerialize: (value: Role) => Buffer.from(Role.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Role.decode(value),
-  },
-  roleByName: {
-    path: "/auth.RoleService/roleByName",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: RoleByName) => Buffer.from(RoleByName.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => RoleByName.decode(value),
-    responseSerialize: (value: Role) => Buffer.from(Role.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Role.decode(value),
-  },
-  /** rpc update (RoleInput) returns (AuthResponse) {} */
-  delete: {
-    path: "/auth.RoleService/delete",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: RoleById) => Buffer.from(RoleById.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => RoleById.decode(value),
-    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Status.decode(value),
-  },
-  health: {
-    path: "/auth.RoleService/health",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => Empty.decode(value),
-    responseSerialize: (value: HealthCheckResponse) => Buffer.from(HealthCheckResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => HealthCheckResponse.decode(value),
-  },
-} as const;
-
-export interface RoleServiceServer extends UntypedServiceImplementation {
-  create: handleUnaryCall<RoleInput, HealthCheckResponse>;
-  roles: handleUnaryCall<Empty, RoleList>;
-  roleById: handleUnaryCall<RoleById, Role>;
-  roleByName: handleUnaryCall<RoleByName, Role>;
-  /** rpc update (RoleInput) returns (AuthResponse) {} */
-  delete: handleUnaryCall<RoleById, Status>;
-  health: handleUnaryCall<Empty, HealthCheckResponse>;
+  health: handleUnaryCall<Empty, Status>;
+  register: handleUnaryCall<RegisterRequest, AuthResponse>;
+  login: handleUnaryCall<LoginRequest, AuthResponse>;
+  refreshToken: handleUnaryCall<TokenRequest, AuthToken>;
+  logout: handleUnaryCall<TokenRequest, Status>;
 }
 
 export interface UserServiceClient {
-  updatePassword(request: UpdatePasswordInput): Observable<Status>;
+  health(request: Empty): Observable<Status>;
 
-  updateEmail(request: UpdateEmailInput): Observable<Status>;
+  changePassword(request: ChangePasswordRequest): Observable<Status>;
 
-  assignRole(request: UserRoleInput): Observable<Status>;
+  changeEmail(request: ChangeEmailRequest): Observable<Status>;
 
-  removeRole(request: UserRoleInput): Observable<Status>;
+  requestPasswordResetToken(request: RequestPasswordResetMessage): Observable<Status>;
 
-  health(request: Empty): Observable<HealthCheckResponse>;
+  resetPassword(request: ResetPasswordMessage): Observable<Status>;
+
+  requestEmailVerification(request: EmailData): Observable<Status>;
+
+  verifyEmail(request: TokenRequest): Observable<Status>;
 }
 
 export interface UserServiceController {
-  updatePassword(request: UpdatePasswordInput): Promise<Status> | Observable<Status> | Status;
+  health(request: Empty): Promise<Status> | Observable<Status> | Status;
 
-  updateEmail(request: UpdateEmailInput): Promise<Status> | Observable<Status> | Status;
+  changePassword(request: ChangePasswordRequest): Promise<Status> | Observable<Status> | Status;
 
-  assignRole(request: UserRoleInput): Promise<Status> | Observable<Status> | Status;
+  changeEmail(request: ChangeEmailRequest): Promise<Status> | Observable<Status> | Status;
 
-  removeRole(request: UserRoleInput): Promise<Status> | Observable<Status> | Status;
+  requestPasswordResetToken(request: RequestPasswordResetMessage): Promise<Status> | Observable<Status> | Status;
 
-  health(request: Empty): Promise<HealthCheckResponse> | Observable<HealthCheckResponse> | HealthCheckResponse;
+  resetPassword(request: ResetPasswordMessage): Promise<Status> | Observable<Status> | Status;
+
+  requestEmailVerification(request: EmailData): Promise<Status> | Observable<Status> | Status;
+
+  verifyEmail(request: TokenRequest): Promise<Status> | Observable<Status> | Status;
 }
 
 export function UserServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["updatePassword", "updateEmail", "assignRole", "removeRole", "health"];
+    const grpcMethods: string[] = [
+      "health",
+      "changePassword",
+      "changeEmail",
+      "requestPasswordResetToken",
+      "resetPassword",
+      "requestEmailVerification",
+      "verifyEmail",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("UserService", method)(constructor.prototype[method], method, descriptor);
@@ -935,59 +1343,262 @@ export const USER_SERVICE_NAME = "UserService";
 
 export type UserServiceService = typeof UserServiceService;
 export const UserServiceService = {
-  updatePassword: {
-    path: "/auth.UserService/updatePassword",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: UpdatePasswordInput) => Buffer.from(UpdatePasswordInput.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => UpdatePasswordInput.decode(value),
-    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Status.decode(value),
-  },
-  updateEmail: {
-    path: "/auth.UserService/updateEmail",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: UpdateEmailInput) => Buffer.from(UpdateEmailInput.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => UpdateEmailInput.decode(value),
-    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Status.decode(value),
-  },
-  assignRole: {
-    path: "/auth.UserService/assignRole",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: UserRoleInput) => Buffer.from(UserRoleInput.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => UserRoleInput.decode(value),
-    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Status.decode(value),
-  },
-  removeRole: {
-    path: "/auth.UserService/removeRole",
-    requestStream: false,
-    responseStream: false,
-    requestSerialize: (value: UserRoleInput) => Buffer.from(UserRoleInput.encode(value).finish()),
-    requestDeserialize: (value: Buffer) => UserRoleInput.decode(value),
-    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => Status.decode(value),
-  },
   health: {
-    path: "/auth.UserService/health",
+    path: "/auth.UserService/Health",
     requestStream: false,
     responseStream: false,
     requestSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
     requestDeserialize: (value: Buffer) => Empty.decode(value),
-    responseSerialize: (value: HealthCheckResponse) => Buffer.from(HealthCheckResponse.encode(value).finish()),
-    responseDeserialize: (value: Buffer) => HealthCheckResponse.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+  changePassword: {
+    path: "/auth.UserService/ChangePassword",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ChangePasswordRequest) => Buffer.from(ChangePasswordRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ChangePasswordRequest.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+  changeEmail: {
+    path: "/auth.UserService/ChangeEmail",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ChangeEmailRequest) => Buffer.from(ChangeEmailRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ChangeEmailRequest.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+  requestPasswordResetToken: {
+    path: "/auth.UserService/requestPasswordResetToken",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: RequestPasswordResetMessage) =>
+      Buffer.from(RequestPasswordResetMessage.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => RequestPasswordResetMessage.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+  resetPassword: {
+    path: "/auth.UserService/resetPassword",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ResetPasswordMessage) => Buffer.from(ResetPasswordMessage.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ResetPasswordMessage.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+  requestEmailVerification: {
+    path: "/auth.UserService/RequestEmailVerification",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: EmailData) => Buffer.from(EmailData.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => EmailData.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+  verifyEmail: {
+    path: "/auth.UserService/VerifyEmail",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: TokenRequest) => Buffer.from(TokenRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => TokenRequest.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
   },
 } as const;
 
 export interface UserServiceServer extends UntypedServiceImplementation {
-  updatePassword: handleUnaryCall<UpdatePasswordInput, Status>;
-  updateEmail: handleUnaryCall<UpdateEmailInput, Status>;
-  assignRole: handleUnaryCall<UserRoleInput, Status>;
-  removeRole: handleUnaryCall<UserRoleInput, Status>;
-  health: handleUnaryCall<Empty, HealthCheckResponse>;
+  health: handleUnaryCall<Empty, Status>;
+  changePassword: handleUnaryCall<ChangePasswordRequest, Status>;
+  changeEmail: handleUnaryCall<ChangeEmailRequest, Status>;
+  requestPasswordResetToken: handleUnaryCall<RequestPasswordResetMessage, Status>;
+  resetPassword: handleUnaryCall<ResetPasswordMessage, Status>;
+  requestEmailVerification: handleUnaryCall<EmailData, Status>;
+  verifyEmail: handleUnaryCall<TokenRequest, Status>;
+}
+
+export interface SessionServiceClient {
+  health(request: Empty): Observable<Status>;
+
+  getAllUserSessions(request: IdInput): Observable<SessionList>;
+
+  logoutOtherUserSession(request: IdInput): Observable<Status>;
+}
+
+export interface SessionServiceController {
+  health(request: Empty): Promise<Status> | Observable<Status> | Status;
+
+  getAllUserSessions(request: IdInput): Promise<SessionList> | Observable<SessionList> | SessionList;
+
+  logoutOtherUserSession(request: IdInput): Promise<Status> | Observable<Status> | Status;
+}
+
+export function SessionServiceControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["health", "getAllUserSessions", "logoutOtherUserSession"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("SessionService", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("SessionService", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const SESSION_SERVICE_NAME = "SessionService";
+
+export type SessionServiceService = typeof SessionServiceService;
+export const SessionServiceService = {
+  health: {
+    path: "/auth.SessionService/Health",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => Empty.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+  getAllUserSessions: {
+    path: "/auth.SessionService/GetAllUserSessions",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: IdInput) => Buffer.from(IdInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => IdInput.decode(value),
+    responseSerialize: (value: SessionList) => Buffer.from(SessionList.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => SessionList.decode(value),
+  },
+  logoutOtherUserSession: {
+    path: "/auth.SessionService/LogoutOtherUserSession",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: IdInput) => Buffer.from(IdInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => IdInput.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+} as const;
+
+export interface SessionServiceServer extends UntypedServiceImplementation {
+  health: handleUnaryCall<Empty, Status>;
+  getAllUserSessions: handleUnaryCall<IdInput, SessionList>;
+  logoutOtherUserSession: handleUnaryCall<IdInput, Status>;
+}
+
+export interface RoleServiceClient {
+  health(request: Empty): Observable<Status>;
+
+  create(request: CreateRoleInput): Observable<RoleData>;
+
+  update(request: UpdateRoleInput): Observable<Status>;
+
+  find(request: IdInput): Observable<RoleData>;
+
+  list(request: Empty): Observable<RoleList>;
+
+  delete(request: IdInput): Observable<Status>;
+}
+
+export interface RoleServiceController {
+  health(request: Empty): Promise<Status> | Observable<Status> | Status;
+
+  create(request: CreateRoleInput): Promise<RoleData> | Observable<RoleData> | RoleData;
+
+  update(request: UpdateRoleInput): Promise<Status> | Observable<Status> | Status;
+
+  find(request: IdInput): Promise<RoleData> | Observable<RoleData> | RoleData;
+
+  list(request: Empty): Promise<RoleList> | Observable<RoleList> | RoleList;
+
+  delete(request: IdInput): Promise<Status> | Observable<Status> | Status;
+}
+
+export function RoleServiceControllerMethods() {
+  return function (constructor: Function) {
+    const grpcMethods: string[] = ["health", "create", "update", "find", "list", "delete"];
+    for (const method of grpcMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("RoleService", method)(constructor.prototype[method], method, descriptor);
+    }
+    const grpcStreamMethods: string[] = [];
+    for (const method of grpcStreamMethods) {
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("RoleService", method)(constructor.prototype[method], method, descriptor);
+    }
+  };
+}
+
+export const ROLE_SERVICE_NAME = "RoleService";
+
+export type RoleServiceService = typeof RoleServiceService;
+export const RoleServiceService = {
+  health: {
+    path: "/auth.RoleService/Health",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => Empty.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+  create: {
+    path: "/auth.RoleService/Create",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: CreateRoleInput) => Buffer.from(CreateRoleInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => CreateRoleInput.decode(value),
+    responseSerialize: (value: RoleData) => Buffer.from(RoleData.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => RoleData.decode(value),
+  },
+  update: {
+    path: "/auth.RoleService/Update",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: UpdateRoleInput) => Buffer.from(UpdateRoleInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => UpdateRoleInput.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+  find: {
+    path: "/auth.RoleService/Find",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: IdInput) => Buffer.from(IdInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => IdInput.decode(value),
+    responseSerialize: (value: RoleData) => Buffer.from(RoleData.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => RoleData.decode(value),
+  },
+  list: {
+    path: "/auth.RoleService/List",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: Empty) => Buffer.from(Empty.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => Empty.decode(value),
+    responseSerialize: (value: RoleList) => Buffer.from(RoleList.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => RoleList.decode(value),
+  },
+  delete: {
+    path: "/auth.RoleService/Delete",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: IdInput) => Buffer.from(IdInput.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => IdInput.decode(value),
+    responseSerialize: (value: Status) => Buffer.from(Status.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => Status.decode(value),
+  },
+} as const;
+
+export interface RoleServiceServer extends UntypedServiceImplementation {
+  health: handleUnaryCall<Empty, Status>;
+  create: handleUnaryCall<CreateRoleInput, RoleData>;
+  update: handleUnaryCall<UpdateRoleInput, Status>;
+  find: handleUnaryCall<IdInput, RoleData>;
+  list: handleUnaryCall<Empty, RoleList>;
+  delete: handleUnaryCall<IdInput, Status>;
 }
 
 export interface MessageFns<T> {

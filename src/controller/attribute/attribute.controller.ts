@@ -1,4 +1,4 @@
-import { CreateAttributeInput } from './../../generated/product';
+import { CreateAttributeInput } from 'src/generated/product';
 import {
   Body,
   Controller,
@@ -10,7 +10,7 @@ import {
   Patch,
   Put,
 } from '@nestjs/common';
-import { UpdateAttributeInput } from './dto';
+import { UpdateAttributeInput } from 'src/dto/attribute';
 import { ClientGrpc } from '@nestjs/microservices';
 import {
   ATTRIBUTE_SERVICE_NAME,
@@ -41,7 +41,7 @@ export class AttributeController implements OnModuleInit {
   update(@Param('id') id: string, data: UpdateAttributeInput) {
     const value = {
       id,
-      ...data,
+      data,
     };
     return this.service.update(value);
   }

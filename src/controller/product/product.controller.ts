@@ -8,13 +8,15 @@ import {
   Param,
   Patch,
   Put,
-  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { CreateProductInput, UpdateProductInput } from './dto/product.inputs';
+import {
+  CreateProductInput,
+  UpdateProductInput,
+} from 'src/dto/product/product.inputs';
 import { ApiBearerAuth, ApiBody, ApiOkResponse } from '@nestjs/swagger';
-import { ProductResponse } from './dto/product.response';
+import { ProductResponse } from 'src/dto/product/product.response';
 import { RestAuthGuard } from 'src/guards';
 import { ClientGrpc } from '@nestjs/microservices';
 import {
