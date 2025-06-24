@@ -3,7 +3,7 @@
 set -e
 
 PROTO_DIR=./proto
-OUT_DIR=./src/generated
+OUT_DIR=./src/common/proto
 PROTOC_GEN_TS_PROTO=./node_modules/.bin/protoc-gen-ts_proto
 
 echo "Cleaning previous output..."

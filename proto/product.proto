@@ -72,7 +72,7 @@ service AttributeService {
   rpc Get (Id) returns (Attribute) {}
   rpc List (ListAttributeInput) returns (AttributeList) {}
   rpc ListVariantAttributes (ListAttributeByRelationInput) returns (AttributeList) {}
-  rpc Update (UpdateAttributeInput) returns (Attribute) {}
+  rpc Update (UpdateAttributeInput) returns (Status) {}
   rpc Delete (Id) returns (Status) {}
 }
 
